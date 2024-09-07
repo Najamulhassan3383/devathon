@@ -16,6 +16,8 @@ import { verifyUser } from "../middlewares/verifyUser.js";
 
 import * as chatController from '../controllers/chat.js';
 
+import { submitTest } from '../controllers/testAndMcqs.js';
+
 const router = express.Router();
 
 // Get all test series (authenticated)
@@ -40,5 +42,10 @@ router.get("/:id/solved/:userId", verifyUser, getSolvedQuestions);
 // Enroll in a test series (authenticated)
 router.get("/enrollInTestSeries/:id", verifyUser, enrollInTestSeries);
 router.get('/chat/:userID/:teacherID', verifyUser, chatController.getChatByUserAndTeacher);
+
+router.get('/chat/:ID', verifyUser, chatController.getChatByUserOrTeacher);
+
+// Submit test
+router.post('/:id/submit', verifyUser, submitTest);
 
 export default router;

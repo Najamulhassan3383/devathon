@@ -73,9 +73,16 @@ export default function TestDetails({ socket }) { // Accept socket prop
 
   const handleSubmit = async () => {
     try {
-      console.log("Submitted answers:", answers);
+      const response = await axios.post(`http://localhost:5000/api/test-series/${id}/submit`, 
+        { answers },
+        {
+          headers: {
+            'x-auth-token': token,
+          },
+        }
+      );
       message.success("Test submitted successfully!");
-      navigate("/tests");
+      navigate(`/tests/${id}/results`, { state: { results: response.data.results } });
     } catch (error) {
       console.error("Error submitting test:", error);
       message.error("Failed to submit test");

@@ -17,6 +17,7 @@ const msqsSchema = new Schema(
     correct_answers: {
       type: String,
       required: true,
+      set: v => v.trim().toLowerCase(), // Normalize the correct answer
     },
     subject: {
       type: String,

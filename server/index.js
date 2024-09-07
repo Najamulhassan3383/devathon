@@ -59,17 +59,13 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   socket.on("sendMessage", async ({ userID, teacherID, message }) => {
     try {
-      let chat = await Chat.findOne({ userID, teacherID });
-
-      // Fetch the user who is sending the message (from the socket user id)
-      const sender = await User.findById(socket.user.id);
-
-      if (!sender) {
-        return console.error("Sender not found");
+      // Ensure userID and teacherID are provided
+      if (!userID || !teacherID) {
+        return socket.emit('error', { message: 'UserID and TeacherID are required.' });
       }
 
-      // Determine if the sender is the teacher or student based on the role
-      const senderID = sender.role === 'teacher' ? teacherID : userID;
+      // Find an existing chat between user and teacher, or create a new one
+      let chat = await Chat.findOne({ userID, teacherID });
 
       // Create a new chat if it doesn't exist
       if (!chat) {
@@ -77,16 +73,19 @@ io.on("connection", (socket) => {
         chat = new Chat({ chatID, userID, teacherID, chat: [] });
       }
 
+      // Create the new message
       const newMessage = {
-        senderID: socket.user.id, // Sender ID based on the authenticated user
+        senderID: socket.user.id, // Ensure this is the correct sender (from the socket's user context)
         message,
         time: new Date(),
       };
 
+      // Add the new message to the chat
       chat.chat.push(newMessage);
       await chat.save();
 
       console.log("Message sent:", newMessage);
+      
 
       // Broadcast the message to all in the room
       io.to(chat.chatID).emit("receiveMessage", {
@@ -99,6 +98,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 
 app.set("io", io);
 
