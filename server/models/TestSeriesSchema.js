@@ -1,51 +1,74 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-const testSeriesSchema = new Schema({
+const testSeriesSchema = new Schema(
+  {
     teachersID: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     test_series_name: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String
+      type: String,
     },
-    questions: [{
+    questions: [
+      {
         type: Schema.Types.ObjectId,
-        ref: 'MSQs'
-    }],
+        ref: "MSQs",
+      },
+    ],
     isPaid: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     price: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
-    forums: [{
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+    forums: [
+      {
         userID: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
+          type: Schema.Types.ObjectId,
+          ref: "User",
         },
         discussion: {
-            type: String
-        }
-    }],
-    solvedBy: [{
+          type: String,
+        },
+      },
+    ],
+    joinedBy: [
+      {
         userID: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    solvedBy: [
+      {
+        userID: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
         },
         solvedAt: {
-            type: Date,
-            default: Date.now
-        }
-    }],
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     joinedBy: [{
         userID: {
             type: Schema.Types.ObjectId,
@@ -56,19 +79,22 @@ const testSeriesSchema = new Schema({
             default: Date.now
         }
     }],
-    ratings: [{
+    ratings: [
+      {
         userID: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
+          type: Schema.Types.ObjectId,
+          ref: "User",
         },
         rating: {
-            type: Number
+          type: Number,
         },
         review: {
-            type: String
-        }
-    }]
+          type: String,
+        },
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-}, { timestamps: true });
-
-export default model('TestSeries', testSeriesSchema);
+export default model("TestSeries", testSeriesSchema);
