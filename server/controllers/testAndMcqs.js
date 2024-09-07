@@ -516,10 +516,10 @@ export async function submitTest(req, res) {
       // Trim and convert to lowercase for case-insensitive comparison
       console.log("User Answer", userAnswer);
       console.log("Correct Answer", question.correct_answers);
-      userAnswer = userAnswer.trim().split(" ")[1];
+      userAnswer = userAnswer
       const isCorrect =
-        userAnswer.trim().toLowerCase() ===
-        question.correct_answers.trim().toLowerCase();
+        userAnswer?.toLowerCase() ===
+        question.correct_answers?.toLowerCase();
       if (isCorrect) correctAnswers++;
 
       results.questions.push({
