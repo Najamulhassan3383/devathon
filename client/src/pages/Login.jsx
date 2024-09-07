@@ -1,30 +1,58 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SERVER_URL } from "../key";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import { message } from "antd";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const [cookie, setCookie, removeCookie] = useCookies(["x-auth-token"]);
+  const [cookies, setCookies, removeCookies] = useCookies(["x-auth-token"]);
+
+
+  useEffect(() => {
+    if (cookies['x-auth-token']) {
+      axios.get(`${SERVER_URL}/api/user/verify`, {
+        headers: {
+          'x-auth-token': cookies['x-auth-token']
+        }
+      }).then(res => {
+        console.log(res)
+        if (res.data.success) {
+          console.log(res)
+          navigate('/');
+        }
+      }).catch(err => {
+        console.log(err);
+      });
+    }
+  }, [cookies]);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     try {
       const response = await axios.post(`${SERVER_URL}/api/user/login`, {
         email,
         password,
       });
-      if(response.data.success){
-        
+      if (response.data.success) {
+        setCookies("x-auth-token", response.data.token);
+        message.success("Login successful");
+        navigate("/");
+      } else {
+        message.error(response.data.message);
       }
     } catch (err) {
       console.error(err);
       setError("Login failed. Please check your credentials and try again.");
+      setTimeout(() => {
+        setError("");
+      }, 3000);
     }
   };
 
@@ -66,7 +94,7 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-300"
+            className="w-full bg-primary text-white py-2 rounded-md hover:bg-red-600 transition duration-300"
           >
             Login
           </button>

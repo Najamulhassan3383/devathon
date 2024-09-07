@@ -26,8 +26,8 @@ const userSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'suspended'],
-        default: 'active'
+        enum: ['active', 'inactive', 'suspended', 'pending'],
+        default: 'pending'
     },
     test_series: [{
         type: mongoose.Schema.Types.ObjectId,
