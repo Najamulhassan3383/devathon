@@ -72,6 +72,33 @@ function App() {
         });
       });
 
+      // Listen for discussion notifications
+      newSocket.on('newDiscussion', (data) => {
+        notification.info({
+          message: `New Discussion in ${data.test_series_name}`,
+          description: data.message,
+          placement: 'topRight',
+        });
+      });
+
+      // Listen for solve question notification
+      newSocket.on('solveQuestion', (data) => {
+        notification.info({
+          message: `Question Solved in ${data.test_series_name}`,
+          description: `Answer: ${data.correct ? 'Correct' : 'Incorrect'}`,
+          placement: 'topRight',
+        });
+      });
+
+      // Listen for rating added notification
+      newSocket.on('addRatingToTestSeries', (data) => {
+        notification.info({
+          message: `New Rating for ${data.test_series_name}`,
+          description: `Rating: ${data.rating}/5, Review: ${data.review}`,
+          placement: 'topRight',
+        });
+      });
+
       // Clean up the socket connection on component unmount
       return () => newSocket.close();
     }

@@ -376,3 +376,135 @@ export async function solveQuestion(req, res) {
     }
 }
 
+export async function postDiscussion(req, res) {
+    try {
+        const { testSeriesId } = req.params; // Get the test series ID from the request parameters
+        const { discussion } = req.body; // Get the discussion text from the request body
+
+        // Find the test series by ID
+        const testSeries = await TestSeries.findById(testSeriesId).populate('solvedBy.userID'); // Assuming `solvedBy` is used to track enrolled users
+
+        if (!testSeries) {
+            return res.status(404).json({ message: "Test series not found" });
+        }
+
+        // Add the new discussion to the forum
+        testSeries.forums.push({
+            userID: req.user.id, // Assume req.user contains the authenticated user's info
+            discussion
+        });
+
+        await testSeries.save(); // Save the updated test series
+
+        // Notify all enrolled users via email
+        const enrolledUsers = testSeries.solvedBy.map(user => user.userID); // Get all enrolled users
+        const uniqueUsers = [...new Set(enrolledUsers.map(user => user._id.toString()))]; // Ensure no duplicate users
+
+        const emailPromises = uniqueUsers.map(async userId => {
+            const user = await User.findById(userId);
+            return sendEmail({
+                to: user.email,
+                subject: "New Discussion in Test Series",
+                html: `
+                    <div>
+                        <h1>New Discussion in Test Series: ${testSeries.test_series_name}</h1>
+                        <p>A new discussion has been posted in the forum:</p>
+                        <p>${discussion}</p>
+                        <p>Posted by: ${req.user.fName} ${req.user.lName}</p>
+                    </div>
+                `
+            });
+        });
+
+        await Promise.all(emailPromises); // Send all emails concurrently
+
+        // Emit a Socket.IO event to notify all enrolled users about the new discussion
+        const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
+        uniqueUsers.forEach(userId => {
+            io.to(userId).emit("newDiscussion", {
+                test_series_name: testSeries.test_series_name,
+                discussion,
+                message: `A new discussion has been posted in the test series "${testSeries.test_series_name}".`,
+            });
+        });
+
+        // Respond with a success message
+        res.status(201).json({
+            success: true,
+            message: "Discussion added and all enrolled users notified.",
+            forum: testSeries.forums
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+export async function getDiscussionsByTestSeriesId(req, res) {
+    try {
+        const testSeries = await TestSeries.findById(req.params.testSeriesId).populate('forums.userID');
+
+        if (!testSeries) {
+            return res.status(404).json({ message: "Test series not found" });
+        }
+
+        res.status(200).json({ success: true, forum: testSeries.forums });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+
+
+export async function addRatingToTestSeries(req, res) {
+    try {
+        const { testSeriesId } = req.params; // Get the test series ID from the request parameters
+        const { rating, review } = req.body; // Get the rating and review from the request body
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: "Rating must be between 1 and 5." });
+        }
+
+        // Find the test series by ID
+        const testSeries = await TestSeries.findById(testSeriesId);
+
+        if (!testSeries) {
+            return res.status(404).json({ message: "Test series not found" });
+        }
+
+        const userID = req.user.id; // Assume req.user contains the authenticated user's info
+
+        // Check if the user has already rated the test series
+        const existingRating = testSeries.ratings.find(r => r.userID.toString() === userID.toString());
+
+        if (existingRating) {
+            // Update the existing rating
+            existingRating.rating = rating;
+            existingRating.review = review || existingRating.review;
+        } else {
+            // Add new rating and review
+            testSeries.ratings.push({
+                userID,
+                rating,
+                review
+            });
+        }
+
+        await testSeries.save(); // Save the updated test series with the new/updated rating
+
+        res.status(200).json({
+            success: true,
+            message: "Rating added/updated successfully",
+            ratings: testSeries.ratings
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+

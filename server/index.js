@@ -13,6 +13,7 @@ import Chat from "./models/ChatSchema.js"; // Import all models
 import "./models/TestSeriesSchema.js";
 import "./models/MSQsSchema.js";
 import "./models/SolvedQuestionSchema.js";
+import { sign } from "crypto";
 
 dotenv.config();
 const app = express();
@@ -57,7 +58,8 @@ io.use((socket, next) => {
 // Handle socket connections
 io.on("connection", (socket) => {
   console.log("New client connected");
-
+    console.log(socket.user.id);
+    
   // Join room based on chatID
   socket.on("joinRoom", async ({ chatID }) => {
     socket.join(chatID);
