@@ -16,7 +16,8 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import Tests from "./pages/Tests/Tests";
-import TestDetails from "./pages/Tests/TestDetails";import { useCookies } from 'react-cookie';
+import TestDetails from "./pages/Tests/TestDetails";
+import { useCookies } from 'react-cookie';
 
 const SERVER_URL = 'http://localhost:5000'; // Update this with your actual server URL
 
@@ -67,6 +68,33 @@ function App() {
         notification.info({
           message: `New Question Added to ${data.test_series_name}`,
           description: data.message,
+          placement: 'topRight',
+        });
+      });
+
+      // Listen for discussion notifications
+      newSocket.on('newDiscussion', (data) => {
+        notification.info({
+          message: `New Discussion in ${data.test_series_name}`,
+          description: data.message,
+          placement: 'topRight',
+        });
+      });
+
+      // Listen for solve question notification
+      newSocket.on('solveQuestion', (data) => {
+        notification.info({
+          message: `Question Solved in ${data.test_series_name}`,
+          description: `Answer: ${data.correct ? 'Correct' : 'Incorrect'}`,
+          placement: 'topRight',
+        });
+      });
+
+      // Listen for rating added notification
+      newSocket.on('addRatingToTestSeries', (data) => {
+        notification.info({
+          message: `New Rating for ${data.test_series_name}`,
+          description: `Rating: ${data.rating}/5, Review: ${data.review}`,
           placement: 'topRight',
         });
       });

@@ -45,7 +45,20 @@ const testSeriesSchema = new Schema({
             type: Date,
             default: Date.now
         }
+    }],
+    ratings: [{
+        userID: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        rating: {
+            type: Number
+        },
+        review: {
+            type: String
+        }
     }]
+
 }, { timestamps: true });
 
 export default model('TestSeries', testSeriesSchema);
