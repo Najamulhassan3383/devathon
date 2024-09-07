@@ -5,7 +5,10 @@ import {
   getTestSeriesQuestions,
   getSolvedQuestions,
 } from "../controllers/testSeriesController.js";
-import { getTeacherTestSeries } from "../controllers/testAndMcqs.js";
+import {
+  getTeacherTestSeries,
+  enrollInTestSeries,
+} from "../controllers/testAndMcqs.js";
 import { addTestSeriesWithQuestions } from "../controllers/testAndMcqs.js";
 import { verifyUser } from "../middlewares/verifyUser.js";
 
@@ -29,6 +32,6 @@ router.get("/:id/solved/:userId", verifyUser, getSolvedQuestions);
 // Get all test series created by the logged-in teacher
 
 // Enroll in a test series (authenticated)
-router.get('/enrollInTestSeries/:id', verifyUser, zainContoller.enrollInTestSeries);
+router.get("/enrollInTestSeries/:id", verifyUser, enrollInTestSeries);
 
 export default router;
