@@ -1,27 +1,31 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-const msqsSchema = new Schema({
+const msqsSchema = new Schema(
+  {
     question: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
-    options: [{
+    options: [
+      {
         type: String,
-        required: true
-    }],
+        required: true,
+      },
+    ],
     correct_answers: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     subject: {
-        type: String,
-        enum: ['math', 'physics', 'chemistry', 'bio'],
-        required: true
-    }
-}, { timestamps: true });
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
 
-const MSQs = model('MSQs', msqsSchema);
+const MSQs = model("MSQs", msqsSchema);
 
 export default MSQs;
