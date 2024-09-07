@@ -83,7 +83,10 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/" element={<AdminDashboard />}>
           <Route index element={<MainDashbord />} />
-          <Route path="enrollment-journy" element={<MainDashbord />} />
+          <Route path="dashboard" element={<MainDashbord />} />
+          <Route path="users" element={<MainDashbord />} />
+          <Route path="tests" element={<MainDashbord />} />
+          <Route path="test/:id" element={<MainDashbord />} />
           <Route path="document-library" element={<DocumentLibrary />} />
           <Route path="messaging" element={<MainScreen socket={socket} />} /> {/* Pass the socket here */}
           <Route path="student-list" element={<StudentList />} />

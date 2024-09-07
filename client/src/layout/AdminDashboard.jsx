@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Dropdown, Space } from 'antd';
+import { Layout, Menu, Dropdown, Space, message } from 'antd';
 import {
     UserOutlined,
     BellOutlined,
@@ -15,25 +15,24 @@ import { LuLayoutDashboard } from 'react-icons/lu';
 import { AiOutlineInfoCircle, AiOutlineUser, AiOutlineCompass, } from 'react-icons/ai';
 import { IoMdStats } from 'react-icons/io';
 import { RxDashboard } from 'react-icons/rx';
+import { useCookies } from 'react-cookie';
+import { useUser } from '../context/UserContext';
 
 const { Header, Content, Sider } = Layout;
 
-const navSubLinks = [
-    {
-        key: '2',
-        label: 'First Item'
-    },
-    {
-        key: '3',
-        label: 'New Item'
-    },
-    {
-        key: '4',
-        label: 'Another Item',
-    },
-];
+
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { isUser, setIsUser } = useUser();
+    const [cookies, setCookie, removeCookie] = useCookies(['x-auth-token']);
+
+    useEffect(() => {
+        if (isUser) {
+            // navigate('/dashboard');
+        } else {
+            navigate('/login');
+        }
+    }, [isUser])
     const mobileItems = [
         {
             to: 'enrollment-journy',
@@ -80,22 +79,23 @@ const Dashboard = () => {
                 },
             ],
         },
+    ];
+    const navSubLinks = [
         {
-            to: 'campus-content',
-            label: 'Content',
-            icon: <AiOutlineCompass size={25} />,
-            subnavs: [],
-        },
-        {
-            to: "screen-8",
-            label: 'Stats',
-            icon: <RxDashboard size={25} />,
-            subnavs: [],
+            key: '3',
+            label: 'Logout',
+            onClick: () => {
+                setIsUser(null);
+                removeCookie('x-auth-token');
+                message.success('Logged out successfully');
+                navigate('/login');
+            }
         },
     ];
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
+        console.log(isUser)
         const handleResize = () => {
             setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint as per your needs
         };
@@ -128,8 +128,7 @@ const Dashboard = () => {
                                     <UserOutlined style={{ fontSize: 25 }} />
                                 </div>
                                 <div className='admin-text'>
-                                    <div className="admin-name">Michael Ricks</div>
-                                    <div className="admin-designation">Interim Assistant Director of Undergraduate Admissions</div>
+                                    <div className="admin-name">{isUser?.fName} {isUser?.lName}</div>
                                 </div>
                                 <Dropdown
                                     className='ml-2'
@@ -195,8 +194,7 @@ const Dashboard = () => {
                         <div className='flex p-2  border-b-[1px]'>
                             <img className='w-[50px] h-[48px]' src={logo} alt="loogo" />
                             <div className='university-text text-center pl-1 pb-0'>
-                                <div className='univristy-name text-[18px] text-primary font-semibold'>VERMONT UNITED</div>
-                                <div className='text-[10px] text-[#928C8E]'>UNIVERSITY</div>
+                                <div className='univristy-name text-[18px] text-primary font-semibold'>VIRTUAL PREP MASTER</div>
                             </div>
                         </div>
                         <div className="demo-logo-vertical" />
@@ -244,8 +242,8 @@ const Dashboard = () => {
                                         <UserOutlined style={{ fontSize: 25 }} />
                                     </div>
                                     <div className='admin-text'>
-                                        <div className="admin-name">Michael Ricks</div>
-                                        <div className="admin-designation">Interim Assistant Director of Undergraduate Admissions</div>
+                                        <div className="admin-name">{isUser?.fName} {isUser?.lName}</div>
+                                        <div className="admin-designation">{isUser?.role}</div>
                                     </div>
                                     <Dropdown
                                         className='ml-2'
