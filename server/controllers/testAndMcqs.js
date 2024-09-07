@@ -3,6 +3,7 @@ import TestSeries from "../models/TestSeriesSchema.js";
 import MSQs from "../models/MSQsSchema.js";
 import Chat from "../models/ChatSchema.js";
 import SolvedQuestion from "../models/SolvedQuestionSchema.js";
+import { sendEmail } from "./email.js";
 
 import { authorizeRoles, verifyUser } from "../middlewares/verifyUser.js";
 
@@ -40,16 +41,45 @@ export async function addTestSeriesWithQuestions(req, res) {
 
         const savedTestSeries = await newTestSeries.save();
 
+        // Notify all students by email
+        const students = await User.find({ role: 'student' }); // Assuming 'role' field exists to identify students
+        const emailPromises = students.map(student => {
+            return sendEmail({
+                to: student.email,
+                subject: "New Test Series Added",
+                html: `
+                    <div>
+                        <h1>New Test Series: ${test_series_name}</h1>
+                        <p>A new test series has been added. You can now start practicing!</p>
+                        <p>Description: ${description}</p>
+                    </div>
+                `
+            });
+        });
+
+        await Promise.all(emailPromises); // Send all emails concurrently
+
+        // Emit Socket.IO event to notify all students
+        const io = req.app.get("io"); // Retrieve the Socket.IO instance from app
+        io.emit("newTestSeries", {
+            test_series_name,
+            description,
+            isPaid,
+            price,
+            message: `A new test series "${test_series_name}" has been added.`,
+        });
+
         res.status(201).json({
             success: true,
-            message: "Test series created successfully",
+            message: "Test series created successfully and students have been notified.",
             testSeries: savedTestSeries
         });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server Error" });
     }
-};
+}
 
 
 export async function getTestSeries(req, res) {
@@ -114,22 +144,59 @@ export async function updateTestSeries(req, res) {
 }
 
 
-//add new question to test series
 export async function addQuestionToTestSeries(req, res) {
     try {
-        const testSeries = await TestSeries.findById(req.params.id);
+        // Fetch the test series by ID
+        const testSeries = await TestSeries.findById(req.params.id).populate('students');
 
         if (!testSeries) {
             return res.status(404).json({ message: "Test series not found" });
         }
 
+        // Create a new question and save it
         const newQuestion = new MSQs(req.body);
         const savedQuestion = await newQuestion.save();
 
+        // Add the question to the test series and save it
         testSeries.questions.push(savedQuestion._id);
         await testSeries.save();
 
-        res.status(201).json({ success: true, message: "Question added to test series" });
+        // Notify all enrolled students by email
+        const enrolledStudents = await User.find({
+            _id: { $in: testSeries.students }, // Assuming 'students' field contains the list of enrolled student IDs
+        });
+
+        // Send email notifications to all enrolled students
+        const emailPromises = enrolledStudents.map(student => {
+            return sendEmail({
+                to: student.email,
+                subject: "New Question Added to Your Test Series",
+                html: `
+                    <div>
+                        <h1>New Question in Test Series: ${testSeries.test_series_name}</h1>
+                        <p>A new question has been added to the test series you're enrolled in. Start practicing now!</p>
+                    </div>
+                `
+            });
+        });
+
+        await Promise.all(emailPromises); // Send all emails concurrently
+
+        // Emit Socket.IO event to notify all students enrolled in the test series
+        const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
+        enrolledStudents.forEach(student => {
+            io.to(student._id.toString()).emit("newQuestion", {
+                test_series_name: testSeries.test_series_name,
+                question: savedQuestion,
+                message: `A new question has been added to the test series "${testSeries.test_series_name}".`,
+            });
+        });
+
+        // Respond with a success message
+        res.status(201).json({
+            success: true,
+            message: "Question added to test series and students notified.",
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server Error" });
@@ -177,10 +244,31 @@ export async function enrollInTestSeries(req, res) {
             return res.status(400).json({ message: "You are already enrolled in this test series" });
         }
 
+        // Enroll user in the test series
         user.test_series.push(req.params.id);
         await user.save();
 
-        res.status(200).json({ success: true, message: "Enrolled in test series" });
+        // Notify the user by email
+        await sendEmail({
+            to: user.email,
+            subject: "Enrollment Confirmation",
+            html: `
+                <div>
+                    <h1>Enrolled in Test Series: ${testSeries.test_series_name}</h1>
+                    <p>You have successfully enrolled in the test series: ${testSeries.test_series_name}. Start practicing now!</p>
+                </div>
+            `
+        });
+
+        // Emit a Socket.IO event to the user who just enrolled
+        const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
+        io.to(user._id.toString()).emit("enrollmentSuccess", {
+            test_series_name: testSeries.test_series_name,
+            message: `You have successfully enrolled in the test series: ${testSeries.test_series_name}.`,
+        });
+
+        // Respond with a success message
+        res.status(200).json({ success: true, message: "Enrolled in test series and notified the user" });
 
     } catch (error) {
         console.error(error);
@@ -203,10 +291,31 @@ export async function unenrollFromTestSeries(req, res) {
             return res.status(400).json({ message: "You are not enrolled in this test series" });
         }
 
+        // Remove the user from the test series
         user.test_series = user.test_series.filter(ts => ts.toString() !== req.params.id);
         await user.save();
 
-        res.status(200).json({ success: true, message: "Unenrolled from test series" });
+        // Notify the user by email
+        await sendEmail({
+            to: user.email,
+            subject: "Unenrollment Confirmation",
+            html: `
+                <div>
+                    <h1>Unenrolled from Test Series: ${testSeries.test_series_name}</h1>
+                    <p>You have successfully unenrolled from the test series: ${testSeries.test_series_name}.</p>
+                </div>
+            `
+        });
+
+        // Emit a Socket.IO event to the user who just unenrolled
+        const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
+        io.to(user._id.toString()).emit("unenrollmentSuccess", {
+            test_series_name: testSeries.test_series_name,
+            message: `You have successfully unenrolled from the test series: ${testSeries.test_series_name}.`,
+        });
+
+        // Respond with a success message
+        res.status(200).json({ success: true, message: "Unenrolled from test series and notified the user" });
 
     } catch (error) {
         console.error(error);
