@@ -41,6 +41,11 @@ const PendingApprovals = () => {
         try {
             const res = await axios.put(`${SERVER_URL}/api/test-series/approve/${record._id}`)
             console.log(res.data)
+            await axios.post(`${SERVER_URL}/api/email/send-email`, {
+                to: record?.teachersID?.email,
+                subject: "Test Series Approved",
+                text: "Your test series has been approved by the admin"
+            })
             fetchData()
             message.success("Test Series Approved Successfully")
         } catch (error) {

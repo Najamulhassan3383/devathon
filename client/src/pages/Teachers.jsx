@@ -52,6 +52,11 @@ const Teachers = () => {
         try {
             const res = await axios.put(`${SERVER_URL}/api/user/approve-teacher/${record._id}`)
             console.log(res.data)
+            await axios.post(`${SERVER_URL}/api/email/send-email`, {
+                to: record?.email,
+                subject: "Teacher Approved",
+                text: "Your teacher approval has been approved by the admin"
+            })
             message.success("Teacher approved successfully!")
             fetchPendingTeachers()
             fetchActiveAndSuspendedTeachers()

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Typography, Button, message } from "antd";
+import { Card, Row, Col, Typography, Button, message, Modal } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RightOutlined } from "@ant-design/icons";
 import { useCookies } from 'react-cookie';
+import { useUser } from "../../context/UserContext";
+import Stripe from "../Stripe";
 
 const { Title, Text } = Typography;
 
@@ -12,40 +14,48 @@ export default function Tests() {
   const [cookies] = useCookies(['x-auth-token']); // Extract token from cookies
   const token = cookies['x-auth-token']; // Assuming the token is stored here
   const navigate = useNavigate();
+  const [openModal, setOpenModal] = useState(false);
+  const [test, setTest] = useState(null);
+  const { isUser } = useUser();
 
-  useEffect(() => {
-    const fetchTestSeries = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/test-series", 
-          {
-            headers: {
-              'x-auth-token': token, // Pass token for authentication
-            }
+  const fetchTestSeries = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/test-series",
+        {
+          headers: {
+            'x-auth-token': token, // Pass token for authentication
           }
-        );
-        setTestSeries(response.data);
-      } catch (error) {
-        console.error("Error fetching test series:", error);
-        message.error("Failed to load test series. Please try again later.");
-      }
-    };
+        }
+      );
+      setTestSeries(response.data);
+    } catch (error) {
+      console.error("Error fetching test series:", error);
+      message.error("Failed to load test series. Please try again later.");
+    }
+  };
+  useEffect(() => {
 
     fetchTestSeries();
   }, [token]);
 
-  const handleJoin = async (testId) => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/test-series/enrollInTestSeries/${testId}`, {
-        headers: {
-          'x-auth-token': token, // Send the token for authentication
-        }
-      });
-      message.success(response.data.message); // Show success message
-      navigate(`/tests/${testId}`); // Navigate to the test details page
-    } catch (error) {
-      console.error("Error enrolling in test series:", error);
-      message.error(error.response?.data?.message || "Failed to join the test series.");
+  const handleJoin = async (test) => {
+    setTest(test);
+    if (test.isPaid) {
+      setOpenModal(true);
+    } else {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/test-series/enrollInTestSeries/${test?._Id}`, {
+          headers: {
+            'x-auth-token': token, // Send the token for authentication
+          }
+        });
+        message.success(response.data.message); // Show success message
+        navigate(`/tests/${test?._Id}`); // Navigate to the test details page
+      } catch (error) {
+        console.error("Error enrolling in test series:", error);
+        message.error(error.response?.data?.message || "Failed to join the test series.");
+      }
     }
   };
 
@@ -99,7 +109,7 @@ export default function Tests() {
                     ) : (
                       <Button
                         type="primary"
-                        onClick={() => handleJoin(test._id)} // Call handleJoin when the button is clicked
+                        onClick={() => handleJoin(test)} // Call handleJoin when the button is clicked
                         className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
                       >
                         Join Now
@@ -112,6 +122,14 @@ export default function Tests() {
           </Col>
         ))}
       </Row>
+
+      <Modal
+        open={openModal}
+        onCancel={() => setOpenModal(false)}
+        footer={null}
+      >
+        <Stripe data={test} fetchTestSeries={fetchTestSeries} openModal={openModal} setOpenModal={setOpenModal} email={isUser?.email} />
+      </Modal>
     </div>
   );
 }
