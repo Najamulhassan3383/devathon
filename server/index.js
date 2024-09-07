@@ -26,10 +26,7 @@ const PORT = process.env.PORT || 5000;
 connectDb();
 
 // Routes
-app.use("/api/user", userRoutes);
-app.use("/api/email", emailRoutes);
-app.use("/api/s3", s3Routes);
-app.use("/api/test-series", testSeriesRoutes);
+
 // Create HTTP server and integrate Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -105,6 +102,12 @@ io.on("connection", (socket) => {
 });
 
 app.set("io", io);
+
+
+app.use("/api/user", userRoutes);
+app.use("/api/email", emailRoutes);
+app.use("/api/s3", s3Routes);
+app.use("/api/test-series", testSeriesRoutes);
 
 // Start the server
 server.listen(PORT, () => {
