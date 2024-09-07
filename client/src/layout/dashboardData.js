@@ -1,19 +1,26 @@
 import { LuLayoutDashboard } from 'react-icons/lu';
-import { AiOutlineInfoCircle, AiOutlineUser, AiOutlineCompass, AiOutlineSetting, AiOutlineMessage } from 'react-icons/ai';
+import { AiOutlineInfoCircle, AiOutlineUser, AiOutlineCompass } from 'react-icons/ai';
 import { IoMdStats } from 'react-icons/io';
-import { RxDashboard } from 'react-icons/rx';
-import { FiPhoneCall } from 'react-icons/fi';
+import { FaUsers } from "react-icons/fa";
+import { MdInsertPageBreak } from "react-icons/md";
+
 const items = [
     {
-        to: 'enrollment-journy',
-        label: 'Enrollment Journey',
+        to: 'dashboard',
+        label: 'Dashboard',
         icon: <LuLayoutDashboard size={25} />,
         subnavs: [],
     },
     {
-        to: 'document-library',
-        label: 'Document Library',
-        icon: <AiOutlineInfoCircle size={25} />,
+        to: 'users',
+        label: 'Users',
+        icon: <FaUsers size={25} />,
+        subnavs: [],
+    },
+    {
+        to: 'tests',
+        label: 'Tests',
+        icon: <MdInsertPageBreak size={25} />,
         subnavs: [],
     },
     {
@@ -54,34 +61,6 @@ const items = [
         label: 'Campus Content',
         icon: <AiOutlineCompass size={25} />,
         subnavs: [],
-    },
-    {
-        to: 'screen-8',
-        label: 'Mobile App Stats',
-        icon: <RxDashboard size={25} />,
-        subnavs: [],
-    },
-    {
-        to: 'screen-9',
-        label: 'ADDITIONAL',
-        icon: <FiPhoneCall size={1} />,
-        subnavs: [
-            {
-                to: 'screen-9',
-                label: 'Messages',
-                icon: <AiOutlineMessage size={22} />,
-            },
-            {
-                to: 'screen-10',
-                label: 'Settings',
-                icon: <AiOutlineSetting size={22} />,
-            },
-            {
-                to: 'screen-11',
-                label: 'Email Support',
-                icon: <FiPhoneCall size={22} />,
-            },
-        ],
     },
 ];
 
