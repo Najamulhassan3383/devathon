@@ -55,53 +55,61 @@ io.use((socket, next) => {
   }
 });
 
-
 io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.on("joinRoom", ({ chatID }) => {
+    socket.join(chatID);
+    console.log(`User joined room: ${chatID}`);
+  });
+
+  socket.on("leaveRoom", ({ chatID }) => {
+    socket.leave(chatID);
+    console.log(`User left room: ${chatID}`);
+  });
+
   socket.on("sendMessage", async ({ userID, teacherID, message }) => {
     try {
-      // Ensure userID and teacherID are provided
       if (!userID || !teacherID) {
-        return socket.emit('error', { message: 'UserID and TeacherID are required.' });
+        throw new Error("UserID and TeacherID are required.");
       }
 
-      // Find an existing chat between user and teacher, or create a new one
-      let chat = await Chat.findOne({ userID, teacherID });
+      const chatID = `${userID}-${teacherID}`;
+      let chat = await Chat.findOne({ chatID });
 
-      // Create a new chat if it doesn't exist
       if (!chat) {
-        const chatID = `${userID}-${teacherID}`;  // Generate a unique chat ID
-        chat = new Chat({ chatID, userID, teacherID, chat: [] });
+        chat = new Chat({ 
+          chatID, 
+          userID, 
+          teacherID, 
+          chat: [] 
+        });
       }
 
-      // Create the new message
       const newMessage = {
-        senderID: socket.user.id, // Ensure this is the correct sender (from the socket's user context)
+        senderID: socket.user.id,
         message,
         time: new Date(),
       };
 
-      // Add the new message to the chat
       chat.chat.push(newMessage);
       await chat.save();
 
+      io.to(chatID).emit("receiveMessage", newMessage);
       console.log("Message sent:", newMessage);
       
-
-      // Broadcast the message to all in the room
-      io.to(chat.chatID).emit("receiveMessage", {
-        senderID: socket.user.id,
-        message,
-        time: newMessage.time,
-      });
+      // Send acknowledgement back to the client
+      socket.emit("messageSent", { status: 'ok', message: newMessage });
     } catch (error) {
       console.error("Error sending message:", error);
+      socket.emit("messageSent", { status: 'error', message: "Error sending message" });
     }
   });
+
+  // ... (rest of the socket.io code)
 });
 
-
 app.set("io", io);
-
 
 app.use("/api/user", userRoutes);
 app.use("/api/email", emailRoutes);

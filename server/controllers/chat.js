@@ -1,18 +1,28 @@
 import Chat from '../models/ChatSchema.js';
+import User from '../models/UserSchema.js';
 
 // Fetch chat by userID and teacherID
 export const getChatByUserAndTeacher = async (req, res) => {
     try {
         const { userID, teacherID } = req.params;
 
-        // Find the chat between the specified user and teacher
-        const chat = await Chat.findOne({ userID, teacherID }).populate('chat.senderID', 'name'); // Assuming 'name' is stored in the User model
+        let chat = await Chat.findOne({
+            $or: [
+                { chatID: `${userID}-${teacherID}` },
+                { chatID: `${teacherID}-${userID}` }
+            ]
+        }).populate('chat.senderID', 'fName lName');
 
         if (!chat) {
-            return res.status(404).json({ message: "No chat found between the user and teacher" });
+            chat = new Chat({
+                chatID: `${userID}-${teacherID}`,
+                userID,
+                teacherID,
+                chat: []
+            });
+            await chat.save();
         }
 
-        // Return the chat history
         res.status(200).json(chat.chat);
     } catch (error) {
         console.error(error);
@@ -20,25 +30,42 @@ export const getChatByUserAndTeacher = async (req, res) => {
     }
 };
 
-
 export const getChatByUserOrTeacher = async (req, res) => {
     try {
-      const { ID } = req.params; // This can be a userID or teacherID
-  
-      // Fetch all chats where the userID or teacherID matches the provided ID
-      const chats = await Chat.find({
-        $or: [{ userID: ID }, { teacherID: ID }]
-      }).populate('chat.senderID', 'name'); // Assuming 'name' is stored in the User model
-  
-      if (!chats || chats.length === 0) {
-        return res.status(404).json({ message: "No chat found." });
-      }
-  
-      // Return the chat history
-      res.status(200).json(chats);
+        const { ID } = req.params;
+
+        const chats = await Chat.find({
+            $or: [
+                { chatID: { $regex: ID } },
+                { userID: ID },
+                { teacherID: ID }
+            ]
+        }).populate('userID', 'fName lName')
+          .populate('teacherID', 'fName lName');
+
+        if (!chats || chats.length === 0) {
+            return res.status(404).json({ message: "No chats found." });
+        }
+
+        const formattedChats = chats.map(chat => {
+            const otherUser = chat.userID._id.toString() === ID ? chat.teacherID : chat.userID;
+            const lastMessage = chat.chat[chat.chat.length - 1];
+            return {
+                chatID: chat.chatID,
+                otherUser: {
+                    _id: otherUser._id,
+                    name: `${otherUser.fName} ${otherUser.lName}`
+                },
+                lastMessage: lastMessage ? {
+                    message: lastMessage.message,
+                    time: lastMessage.time
+                } : null
+            };
+        });
+
+        res.status(200).json(formattedChats);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server Error" });
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
     }
-  };
-  
+};

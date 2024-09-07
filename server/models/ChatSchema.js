@@ -6,33 +6,33 @@ const chatSchema = new Schema({
     chatID: {
         type: String,
         required: true,
-        unique: true,
+        unique: true
     },
     userID: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: true
     },
     teacherID: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: true
     },
     chat: [{
         senderID: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
+            required: true
         },
         message: {
             type: String,
-            required: true,
+            required: true
         },
         time: {
             type: Date,
-            default: Date.now,
-        },
-    }],
+            default: Date.now
+        }
+    }]
 }, { timestamps: true });
 
 // Ensure that the combination of userID and teacherID is unique
