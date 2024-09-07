@@ -2,13 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Avatar, List, Input } from 'antd';
 import { BsSend } from 'react-icons/bs';
 
-const ChatScreen = ({ chat }) => {
+const ChatScreen = ({ chat, socket }) => {
     const [messages, setMessages] = useState(chat.messages);
     const [inputMessage, setInputMessage] = useState('');
 
     const handleSendMessage = () => {
         if (inputMessage.trim() === '') return;
-        setMessages([...messages, { text: inputMessage, isSent: true }]);
+
+        const newMessage = {
+            text: inputMessage,
+            isSent: true,
+            time: new Date().toLocaleTimeString(),
+        };
+
+        // Emit the new message via Socket.IO
+        socket.emit('sendMessage', {
+            chatID: chat.name, // Use chat name or some unique identifier
+            message: newMessage,
+        });
+
+        setMessages([...messages, newMessage]);
         setInputMessage('');
     };
 
@@ -28,8 +41,7 @@ const ChatScreen = ({ chat }) => {
                     renderItem={(item) => (
                         <List.Item className={`flex items-start ${item.isSent ? 'justify-end' : 'justify-start'}`}>
                             <div
-                                className={`p-2 bg-white rounded-lg ${item.isSent ? 'bg-blue-300 ml-auto' : 'bg-white mr-auto'
-                                    }`}
+                                className={`p-2 bg-white rounded-lg ${item.isSent ? 'bg-blue-300 ml-auto' : 'bg-white mr-auto'}`}
                             >
                                 {item.text}
                                 <div className="text-[10px] text-gray-500">{item.time}</div>
