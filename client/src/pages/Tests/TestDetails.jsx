@@ -1,16 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Radio, Button, message, Typography } from "antd";
+import {
+  Card,
+  Radio,
+  Button,
+  message,
+  Typography,
+  Layout,
+  Space,
+  Progress,
+  Divider,
+  Modal,
+} from "antd";
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  MessageOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
+import Chat from "./Chat";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Content } = Layout;
 
-const TestDetails = () => {
+export default function TestDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [testSeries, setTestSeries] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const fetchTestDetails = async () => {
@@ -36,45 +56,141 @@ const TestDetails = () => {
 
   const handleSubmit = async () => {
     try {
-      // Here you would typically send the answers to your backend
-      // For now, we'll just log them and show a success message
       console.log("Submitted answers:", answers);
       message.success("Test submitted successfully!");
-      navigate("/tests"); // Redirect back to the tests list
+      navigate("/tests");
     } catch (error) {
       console.error("Error submitting test:", error);
       message.error("Failed to submit test");
     }
   };
 
+  const handleNextQuestion = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
   if (!testSeries) {
-    return <div>Loading...</div>;
+    return (
+      <Layout className="min-h-screen bg-gray-100">
+        <Content className="p-8">
+          <Card loading={true} />
+        </Content>
+      </Layout>
+    );
   }
 
-  return (
-    <div className="p-8">
-      <Title level={2}>{testSeries.test_series_name}</Title>
-      <p className="mb-4">{testSeries.description}</p>
-      {questions.map((question, index) => (
-        <Card key={question._id} className="mb-4">
-          <Title level={4}>Question {index + 1}</Title>
-          <p>{question.question}</p>
-          <Radio.Group
-            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-          >
-            {question.options.map((option, optionIndex) => (
-              <Radio key={optionIndex} value={option}>
-                {option}
-              </Radio>
-            ))}
-          </Radio.Group>
-        </Card>
-      ))}
-      <Button type="primary" size="large" onClick={handleSubmit}>
-        Submit Test
-      </Button>
-    </div>
-  );
-};
+  const currentQuestionData = questions[currentQuestion];
 
-export default TestDetails;
+  return (
+    <Layout className="min-h-screen bg-gray-100">
+      <Content className="p-8">
+        <Card className="max-w-4xl mx-auto shadow-lg">
+          <Space direction="vertical" size="large" className="w-full">
+            <div className="flex justify-between items-center">
+              <Title level={2} className="mb-2 text-blue-800">
+                {testSeries.test_series_name}
+              </Title>
+            </div>
+            <Text type="secondary">{testSeries.description}</Text>
+            <Button
+              type="primary"
+              icon={<MessageOutlined />}
+              onClick={() => setIsChatOpen(true)}
+              className="bg-black"
+            >
+              Open Chat
+            </Button>
+
+            <Divider />
+
+            <Space className="w-full justify-between">
+              <Text strong>
+                Question {currentQuestion + 1} of {questions.length}
+              </Text>
+              <Space>
+                <ClockCircleOutlined /> <Text>Time remaining: 45:00</Text>
+              </Space>
+            </Space>
+
+            <Progress
+              percent={(
+                ((currentQuestion + 1) / questions.length) *
+                100
+              ).toFixed(0)}
+              showInfo={false}
+              strokeColor="#1890ff"
+              trailColor="#f0f0f0"
+            />
+
+            {currentQuestionData && (
+              <Card className="bg-gray-50">
+                <Title level={4} className="mb-4">
+                  {currentQuestionData.question}
+                </Title>
+                <Radio.Group
+                  onChange={(e) =>
+                    handleAnswerChange(currentQuestionData._id, e.target.value)
+                  }
+                  value={answers[currentQuestionData._id]}
+                  className="w-full"
+                >
+                  <Space direction="vertical" className="w-full">
+                    {currentQuestionData.options.map((option, optionIndex) => (
+                      <Radio
+                        key={optionIndex}
+                        value={option}
+                        className="w-full py-2 px-4 border rounded hover:bg-gray-100"
+                      >
+                        {option}
+                      </Radio>
+                    ))}
+                  </Space>
+                </Radio.Group>
+              </Card>
+            )}
+
+            <Space className="w-full justify-between">
+              <Button
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestion === 0}
+              >
+                Previous
+              </Button>
+              {currentQuestion < questions.length - 1 ? (
+                <Button type="primary" onClick={handleNextQuestion}>
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={handleSubmit}
+                >
+                  Submit Test
+                </Button>
+              )}
+            </Space>
+          </Space>
+        </Card>
+      </Content>
+
+      <Modal
+        title="Test Chat"
+        visible={isChatOpen}
+        onCancel={() => setIsChatOpen(false)}
+        footer={null}
+        width={600}
+      >
+        <Chat socket={window.socket} testId={id} />
+      </Modal>
+    </Layout>
+  );
+}

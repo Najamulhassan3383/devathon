@@ -16,7 +16,8 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import Tests from "./pages/Tests/Tests";
-import TestDetails from "./pages/Tests/TestDetails";import { useCookies } from 'react-cookie';
+import TestDetails from "./pages/Tests/TestDetails";
+import { useCookies } from 'react-cookie';
 
 const SERVER_URL = 'http://localhost:5000'; // Update this with your actual server URL
 
