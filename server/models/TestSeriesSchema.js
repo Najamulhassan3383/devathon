@@ -46,6 +46,16 @@ const testSeriesSchema = new Schema({
             default: Date.now
         }
     }],
+    joinedBy: [{
+        userID: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        joinedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     ratings: [{
         userID: {
             type: Schema.Types.ObjectId,

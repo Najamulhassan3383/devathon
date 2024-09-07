@@ -19,6 +19,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import Chat from "./Chat";
+import { useCookies } from "react-cookie"; // Import useCookies to retrieve the token
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -31,15 +32,28 @@ export default function TestDetails() {
   const [answers, setAnswers] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [cookies] = useCookies(['x-auth-token']); // Retrieve the token from cookies
+  const token = cookies['x-auth-token']; // Store the token
 
   useEffect(() => {
     const fetchTestDetails = async () => {
       try {
         const [seriesResponse, questionsResponse] = await Promise.all([
-          axios.get(`http://localhost:5000/api/test-series/${id}`),
-          axios.get(`http://localhost:5000/api/test-series/${id}/questions`),
+          axios.get(`http://localhost:5000/api/test-series/${id}`, {
+            headers: {
+              'x-auth-token': token, // Pass the token for authentication
+            },
+          }),
+          axios.get(`http://localhost:5000/api/test-series/${id}/questions`, {
+            headers: {
+              'x-auth-token': token, // Pass the token for authentication
+            },
+          }),
         ]);
         setTestSeries(seriesResponse.data);
+
+        console.log(seriesResponse.data);
+        
         setQuestions(questionsResponse.data);
       } catch (error) {
         console.error("Error fetching test details:", error);
@@ -48,7 +62,7 @@ export default function TestDetails() {
     };
 
     fetchTestDetails();
-  }, [id]);
+  }, [id, token]); // Add token to the dependency array
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));

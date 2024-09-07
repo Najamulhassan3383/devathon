@@ -240,42 +240,35 @@ export async function enrollInTestSeries(req, res) {
 
         const user = await User.findById(req.user.id);
 
-        if (user.test_series.includes(req.params.id)) {
+        // Check if user has already joined the test series
+        if (testSeries.joinedBy.some(join => join.userID.toString() === user._id.toString())) {
             return res.status(400).json({ message: "You are already enrolled in this test series" });
         }
 
-        // Enroll user in the test series
-        user.test_series.push(req.params.id);
+        // Add user to the test series' `joinedBy` array
+        testSeries.joinedBy.push({ userID: user._id });
+        await testSeries.save();
+
+        // Add the test series to user's `test_series` array
+        user.test_series.push(testSeries._id);
         await user.save();
 
-        // Notify the user by email
-        await sendEmail({
-            to: user.email,
-            subject: "Enrollment Confirmation",
-            html: `
-                <div>
-                    <h1>Enrolled in Test Series: ${testSeries.test_series_name}</h1>
-                    <p>You have successfully enrolled in the test series: ${testSeries.test_series_name}. Start practicing now!</p>
-                </div>
-            `
-        });
 
-        // Emit a Socket.IO event to the user who just enrolled
-        const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
+        // Emit a Socket.IO event to notify the user
+        const io = req.app.get("io"); // Retrieve Socket.IO instance from the app
         io.to(user._id.toString()).emit("enrollmentSuccess", {
             test_series_name: testSeries.test_series_name,
             message: `You have successfully enrolled in the test series: ${testSeries.test_series_name}.`,
         });
 
         // Respond with a success message
-        res.status(200).json({ success: true, message: "Enrolled in test series and notified the user" });
+        res.status(200).json({ success: true, message: "Enrolled in test series successfully" });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server Error" });
+        res.status(500).json({ message: "Server Error", error: error.message });
     }
 }
-
 //write a route so user can unenroll from test series
 export async function unenrollFromTestSeries(req, res) {
     try {

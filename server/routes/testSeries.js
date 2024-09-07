@@ -6,18 +6,24 @@ import {
     getSolvedQuestions 
 } from '../controllers/testSeriesController.js';
 
+import { verifyUser } from '../middlewares/verifyUser.js';
+import * as zainContoller from '../controllers/testAndMcqs.js';
+
 const router = express.Router();
 
-// Get all test series
-router.get('/', getAllTestSeries);
+// Get all test series (authenticated)
+router.get('/', verifyUser, getAllTestSeries);
 
-// Get a specific test series by ID
-router.get('/:id', getTestSeriesById);
+// Get a specific test series by ID (authenticated)
+router.get('/:id', verifyUser, getTestSeriesById);
 
-// Get questions for a specific test series
-router.get('/:id/questions', getTestSeriesQuestions);
+// Get questions for a specific test series (authenticated)
+router.get('/:id/questions', verifyUser, getTestSeriesQuestions);
 
-// Get solved questions for a specific test series and user
-router.get('/:id/solved/:userId', getSolvedQuestions);
+// Get solved questions for a specific test series and user (authenticated)
+router.get('/:id/solved/:userId', verifyUser, getSolvedQuestions);
+
+// Enroll in a test series (authenticated)
+router.get('/enrollInTestSeries/:id', verifyUser, zainContoller.enrollInTestSeries);
 
 export default router;

@@ -1,20 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Typography, Button, message } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RightOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useCookies } from 'react-cookie';
+
 const { Title, Text } = Typography;
 
 export default function Tests() {
   const [testSeries, setTestSeries] = useState([]);
+  const [cookies] = useCookies(['x-auth-token']); // Extract token from cookies
+  const token = cookies['x-auth-token']; // Assuming the token is stored here
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTestSeries = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/test-series"
+          "http://localhost:5000/api/test-series", 
+          {
+            headers: {
+              'x-auth-token': token, // Pass token for authentication
+            }
+          }
         );
         setTestSeries(response.data);
       } catch (error) {
@@ -24,14 +32,21 @@ export default function Tests() {
     };
 
     fetchTestSeries();
-  }, []);
+  }, [token]);
 
-  const handleJoin = (testId) => {
-    console.log(testId);
-    // Replace this with your actual API call to join a test series
-    // await axios.post(`http://localhost:5000/api/test-series/${testId}/join`);
-    // message.success("Successfully joined the test series!");
-    navigate(`/tests/${testId}`);
+  const handleJoin = async (testId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/test-series/enrollInTestSeries/${testId}`, {
+        headers: {
+          'x-auth-token': token, // Send the token for authentication
+        }
+      });
+      message.success(response.data.message); // Show success message
+      navigate(`/tests/${testId}`); // Navigate to the test details page
+    } catch (error) {
+      console.error("Error enrolling in test series:", error);
+      message.error(error.response?.data?.message || "Failed to join the test series.");
+    }
   };
 
   return (
@@ -73,13 +88,23 @@ export default function Tests() {
                         Details <RightOutlined />
                       </Button>
                     </Link>
-                    <Button
-                      type="primary"
-                      onClick={() => handleJoin(test._id)}
-                      className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
-                    >
-                      Join Now
-                    </Button>
+                    {test.isJoined ? (
+                      <Button
+                        type="primary"
+                        onClick={() => navigate(`/tests/${test._id}`)} // Navigate to test details
+                        className="bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600"
+                      >
+                        Go
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        onClick={() => handleJoin(test._id)} // Call handleJoin when the button is clicked
+                        className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+                      >
+                        Join Now
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
