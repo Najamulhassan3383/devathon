@@ -241,45 +241,52 @@ export async function enrollInTestSeries(req, res) {
 
     const user = await User.findById(req.user.id);
 
-        // Check if user has already joined the test series
-        if (testSeries.joinedBy.some(join => join.userID.toString() === user._id.toString())) {
-            return res.status(400).json({ message: "You are already enrolled in this test series" });
-        }
+    // Check if user has already joined the test series
+    if (
+      testSeries.joinedBy.some(
+        (join) => join.userID.toString() === user._id.toString()
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "You are already enrolled in this test series" });
+    }
 
-        // Add user to the test series' `joinedBy` array
-        testSeries.joinedBy.push({ userID: user._id });
-        await testSeries.save();
+    // Add user to the test series' `joinedBy` array
+    testSeries.joinedBy.push({ userID: user._id });
+    await testSeries.save();
 
-        // Add the test series to user's `test_series` array
-        user.test_series.push(testSeries._id);
-        await user.save();
+    // Add the test series to user's `test_series` array
+    user.test_series.push(testSeries._id);
+    await user.save();
 
-        // Notify the user by email
-        await sendEmail({
-            to: user.email,
-            subject: "Enrollment Confirmation",
-            html: `
+    // Notify the user by email
+    await sendEmail({
+      to: user.email,
+      subject: "Enrollment Confirmation",
+      html: `
                 <div>
                     <h1>Enrolled in Test Series: ${testSeries.test_series_name}</h1>
                     <p>You have successfully enrolled in the test series: ${testSeries.test_series_name}. Start practicing now!</p>
                 </div>
-            `
-        });
+            `,
+    });
 
-        // Emit a Socket.IO event to the user who just enrolled
-        const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
-        io.to(user._id.toString()).emit("enrollmentSuccess", {
-            test_series_name: testSeries.test_series_name,
-            message: `You have successfully enrolled in the test series: ${testSeries.test_series_name}.`,
-        });
+    // Emit a Socket.IO event to the user who just enrolled
+    const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
+    io.to(user._id.toString()).emit("enrollmentSuccess", {
+      test_series_name: testSeries.test_series_name,
+      message: `You have successfully enrolled in the test series: ${testSeries.test_series_name}.`,
+    });
 
-        // Respond with a success message
-        res.status(200).json({ success: true, message: "Enrolled in test series successfully" });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server Error", error: error.message });
-    }
+    // Respond with a success message
+    res
+      .status(200)
+      .json({ success: true, message: "Enrolled in test series successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 }
 //write a route so user can unenroll from test series
 export async function unenrollFromTestSeries(req, res) {
@@ -522,11 +529,10 @@ export async function addRatingToTestSeries(req, res) {
 
 export async function getTeacherTestSeries(req, res) {
   try {
-    // Check if the id is a valid ObjectId before casting
-    console.log("id", req.user.id);
+    const teacherId = req.user.id;
 
-    // Query for test series
-    const testSeries = await TestSeries.find({ teachersID: req.user.id });
+    // Query for test series without casting to ObjectId
+    const testSeries = await TestSeries.find({ teachersID: teacherId });
 
     if (!testSeries || testSeries.length === 0) {
       return res.status(404).json({ message: "No test series found" });
@@ -536,5 +542,76 @@ export async function getTeacherTestSeries(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
+  }
+}
+
+export async function submitTest(req, res) {
+  try {
+    const { id } = req.params;
+    const { answers } = req.body;
+    const userId = req.user.id;
+
+    const testSeries = await TestSeries.findById(id).populate("questions");
+    if (!testSeries) {
+      return res.status(404).json({ message: "Test series not found" });
+    }
+
+    let correctAnswers = 0;
+    const results = {
+      totalQuestions: testSeries.questions.length,
+      correctAnswers: 0,
+      questions: [],
+    };
+
+    const solvedQuestions = [];
+
+    testSeries.questions.forEach((question) => {
+      let userAnswer = answers[question._id];
+      // Trim and convert to lowercase for case-insensitive comparison
+      console.log("User Answer", userAnswer);
+      console.log("Correct Answer", question.correct_answers);
+      userAnswer = userAnswer.trim().split(" ")[1];
+      const isCorrect =
+        userAnswer.trim().toLowerCase() ===
+        question.correct_answers.trim().toLowerCase();
+      if (isCorrect) correctAnswers++;
+
+      results.questions.push({
+        question: question.question,
+        userAnswer,
+        correctAnswer: question.correct_answers,
+        isCorrect,
+      });
+
+      // Prepare data for SolvedQuestion
+      solvedQuestions.push({
+        userID: userId,
+        questionID: question._id,
+        testSeriesID: id,
+        correct: isCorrect,
+        userAnswer: userAnswer,
+      });
+    });
+
+    results.correctAnswers = correctAnswers;
+
+    // Save individual solved questions
+    await SolvedQuestion.insertMany(solvedQuestions);
+
+    // Save the overall test result
+    const solvedTest = new SolvedQuestion({
+      userID: userId,
+      testSeriesID: id,
+      score: correctAnswers,
+      totalQuestions: testSeries.questions.length,
+      questionID: testSeries.questions[0]._id,
+      correct: correctAnswers > 0,
+    });
+    await solvedTest.save();
+
+    res.status(200).json({ success: true, results });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 }

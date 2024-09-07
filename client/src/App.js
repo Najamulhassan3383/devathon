@@ -23,6 +23,7 @@ import CreateTestSeries from "./pages/TeacherTestSeries/CreateTestSeries";
 import Teachers from './pages/Teachers';
 import Profile from './pages/Profile';
 import Students from "./pages/Students";
+import Results from './pages/Tests/Results';
 
 const SERVER_URL = "http://localhost:5000"; // Update this with your actual server URLimport Students from './pages/Students';
 
@@ -123,7 +124,8 @@ function App() {
           <Route path="tests" element={<Tests />} />
           <Route path="teachers" element={<Teachers />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="tests/:id" element={<TestDetails socket={socket} />} /> {/* Pass the socket */}
+          <Route path="tests/:id" element={<TestDetails socket={socket} />} />
+          <Route path="tests/:id/results" element={<Results />} />
           <Route path="document-library" element={<DocumentLibrary />} />
           <Route path="messaging" element={<MainScreen socket={socket} />} />
           <Route path="student-list" element={<StudentList />} />

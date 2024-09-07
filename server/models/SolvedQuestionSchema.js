@@ -25,6 +25,15 @@ const solvedQuestionSchema = new Schema({
     correct: {
         type: Boolean,
         required: true
+    },
+    userAnswer: {
+        type: String
+    },
+    score: {
+        type: Number
+    },
+    totalQuestions: {
+        type: Number
     }
 }, { timestamps: true });
 
