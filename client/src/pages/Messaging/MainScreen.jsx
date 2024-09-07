@@ -1,83 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import ChatScreen from './ChatScreen';
 import Sidebar from './Sidebar';
-import { notification } from 'antd'; // Ant Design for notifications
-
-const image = "https://th.bing.com/th/id/R.8b167af653c2399dd93b952a48740620?rik=%2fIwzk0n3LnH7dA&pid=ImgRaw&r=0";
+import axios from 'axios';
+import { useCookies } from 'react-cookie';
+import { useUser } from "../../context/UserContext";
 
 function MainScreen({ socket }) {
-  const initialChats = [
-    {
-      name: 'Chat 1',
-      avatar: image,
-      messages: [
-        { text: 'Hello', isSent: true, time: '10:00' },
-        { text: 'Hi', isSent: false, time: '10:01' },
-      ],
-    },
-    {
-      name: 'Chat 2',
-      avatar: image,
-      messages: [
-        { text: 'Hey', isSent: true, time: '11:30' },
-        { text: 'Hey there!', isSent: false, time: '11:32' },
-        { text: 'How are you?', isSent: true, time: '11:34' },
-        { text: 'I am good, thanks!', isSent: false, time: '11:35' },
-      ],
-    },
-  ];
-
-  const [chats, setChats] = useState(initialChats);
+  const [chats, setChats] = useState([]); 
   const [activeChat, setActiveChat] = useState(0);
-  const [isChatScreenActive, setIsChatScreenActive] = useState(true);
+  const [cookies] = useCookies(['x-auth-token']);
+  const token = cookies['x-auth-token']; // Use token for authentication
+  const { isUser } = useUser(); // Fetch user context
 
   useEffect(() => {
+    if (!isUser || !isUser._id) {
+      // Return early if isUser is not defined yet
+      return;
+    }
+
+    // Fetch all chats associated with the current user (whether they are a student or teacher)
+    const fetchChats = async () => {
+      try {
+        const userId = isUser._id; 
+        const response = await axios.get(`http://localhost:5000/api/test-series/chat/${userId}`, {
+          headers: {
+            'x-auth-token': token, 
+          },
+        });
+
+        setChats(response.data);
+      } catch (error) {
+        console.error("Error fetching chats:", error);
+      }
+    };
+
+    fetchChats();
+
     if (socket) {
       // Join the active chat room
-      socket.emit('joinRoom', { chatID: activeChat });
+      if (chats[activeChat]) {
+        socket.emit('joinRoom', { chatID: chats[activeChat].chatID });
+      }
 
       // Listen for incoming messages
       socket.on('receiveMessage', (message) => {
-        if (isChatScreenActive) {
-          // Update chat messages if user is on the chat screen
-          const updatedChats = [...chats];
-          updatedChats[activeChat].messages.push(message);
-          setChats(updatedChats);
-        } else {
-          // Show notification if user is not on the chat screen
-          notification.info({
-            message: `New message from ${message.senderID}`,
-            description: message.message,
-            placement: 'topRight',
+        setChats(prevChats => {
+          const updatedChats = [...prevChats];
+          updatedChats[activeChat].chat.push({
+            message: message.message,
+            senderID: message.senderID,
+            time: new Date(message.time).toLocaleTimeString(),
           });
-        }
+          return updatedChats;
+        });
       });
 
-      // Clean up the socket listener when component unmounts
       return () => {
         socket.off('receiveMessage');
       };
     }
-  }, [socket, activeChat, isChatScreenActive, chats]);
+  }, [socket, activeChat, chats, token, isUser]);
 
-  // Track if user is on the chat screen
-  useEffect(() => {
-    const handleFocus = () => setIsChatScreenActive(true);
-    const handleBlur = () => setIsChatScreenActive(false);
-
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, []);
+  // Early return if isUser is not available yet
+  if (!isUser || !isUser._id) {
+    return <div>Loading...</div>; // or a loader/spinner component
+  }
 
   return (
     <div className="flex h-screen">
       <Sidebar chats={chats} activeChat={activeChat} setActiveChat={setActiveChat} />
-      <ChatScreen chat={chats[activeChat]} socket={socket} />
+      {chats.length > 0 && <ChatScreen chat={chats[activeChat]} socket={socket} userID={isUser._id} />}
     </div>
   );
 }

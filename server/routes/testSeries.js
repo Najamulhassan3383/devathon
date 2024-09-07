@@ -37,4 +37,6 @@ router.get("/:id/solved/:userId", verifyUser, getSolvedQuestions);
 router.get("/enrollInTestSeries/:id", verifyUser, enrollInTestSeries);
 router.get('/chat/:userID/:teacherID', verifyUser, chatController.getChatByUserAndTeacher);
 
+router.get('/chat/:ID', verifyUser, chatController.getChatByUserOrTeacher);
+
 export default router;
