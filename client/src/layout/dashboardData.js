@@ -3,6 +3,8 @@ import { AiOutlineInfoCircle, AiOutlineUser, AiOutlineCompass } from 'react-icon
 import { IoMdStats } from 'react-icons/io';
 import { FaUsers } from "react-icons/fa";
 import { MdInsertPageBreak } from "react-icons/md";
+import { FaChalkboardTeacher } from "react-icons/fa";
+
 
 const items = [
     {
@@ -12,9 +14,15 @@ const items = [
         subnavs: [],
     },
     {
-        to: 'users',
-        label: 'Users',
+        to: 'students',
+        label: 'Students',
         icon: <FaUsers size={25} />,
+        subnavs: [],
+    },
+    {
+        to: 'teachers',
+        label: 'Teachers',
+        icon: <FaChalkboardTeacher size={25} />,
         subnavs: [],
     },
     {

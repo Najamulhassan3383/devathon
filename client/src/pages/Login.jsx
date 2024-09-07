@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SERVER_URL } from "../key";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import { message } from "antd";
 
@@ -92,6 +92,10 @@ const Login = () => {
               required
             />
           </div>
+          <div className="flex justify-between">
+            {/* forgot password */}
+            <Link to="/forgot-password" className="text-blue-500 hover:text-blue-600">Forgot password?</Link>
+          </div>
           <button
             type="submit"
             className="w-full bg-primary text-white py-2 rounded-md hover:bg-red-600 transition duration-300"
@@ -99,6 +103,9 @@ const Login = () => {
             Login
           </button>
         </form>
+        <div className="mt-4">
+          <Link to="/signup" className="text-blue-500 hover:text-blue-600">Don't have an account? Register</Link>
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,9 @@ import MainDashbord from './pages/EnrollmentJourny/MainDashbord';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
+import Students from './pages/Students';
+import Teachers from './pages/Teachers';
+import Profile from './pages/Profile';
 
 
 function App() {
@@ -25,8 +28,10 @@ function App() {
         <Route path="/" element={<AdminDashboard />}>
           <Route index element={<MainDashbord />} />
           <Route path="dashboard" element={<MainDashbord />} />
-          <Route path="users" element={<MainDashbord />} />
+          <Route path="students" element={<Students />} />
           <Route path="tests" element={<MainDashbord />} />
+          <Route path="teachers" element={<Teachers />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="test/:id" element={<MainDashbord />} />
           <Route path="document-library" element={<DocumentLibrary />} />
           <Route path="messaging" element={<MainScreen />} />

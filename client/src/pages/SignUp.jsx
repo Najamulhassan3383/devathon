@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SERVER_URL } from "../key";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { useCookies } from "react-cookie";
 
@@ -234,6 +234,9 @@ const Signup = () => {
             </button>
           </form>
         )}
+        <div className="mt-4">
+          <Link to="/login" className="text-blue-500 hover:text-blue-600">Already have an account? Login</Link>
+        </div>
       </div>
     </div>
   );

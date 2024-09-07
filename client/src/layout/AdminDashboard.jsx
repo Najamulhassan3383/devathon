@@ -82,6 +82,13 @@ const Dashboard = () => {
     ];
     const navSubLinks = [
         {
+            key: '2',
+            label: 'Profile',
+            onClick: () => {
+                navigate('/profile');
+            }
+        },
+        {
             key: '3',
             label: 'Logout',
             onClick: () => {
