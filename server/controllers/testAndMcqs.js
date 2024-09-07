@@ -222,7 +222,7 @@ export async function enrollInTestSeries(req, res) {
 
     const user = await User.findById(req.user.id);
 
-    // Check if user has already joined the test series
+    // Check if user has already joined the test seriesdi
     if (
       testSeries.joinedBy.some(
         (join) => join.userID.toString() === user._id.toString()
@@ -381,29 +381,7 @@ export async function postDiscussion(req, res) {
 
     await testSeries.save(); // Save the updated test series
 
-    // Notify all enrolled users via email
-    const enrolledUsers = testSeries.solvedBy.map((user) => user.userID); // Get all enrolled users
-    const uniqueUsers = [
-      ...new Set(enrolledUsers.map((user) => user._id.toString())),
-    ]; // Ensure no duplicate users
-
-    const emailPromises = uniqueUsers.map(async (userId) => {
-      const user = await User.findById(userId);
-      return sendEmail({
-        to: user.email,
-        subject: "New Discussion in Test Series",
-        html: `
-                    <div>
-                        <h1>New Discussion in Test Series: ${testSeries.test_series_name}</h1>
-                        <p>A new discussion has been posted in the forum:</p>
-                        <p>${discussion}</p>
-                        <p>Posted by: ${req.user.fName} ${req.user.lName}</p>
-                    </div>
-                `,
-      });
-    });
-
-    await Promise.all(emailPromises); // Send all emails concurrently
+    // Notify all enrolled users via email/ Send all emails concurrently
 
     // Emit a Socket.IO event to notify all enrolled users about the new discussion
     const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
