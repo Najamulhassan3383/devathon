@@ -115,7 +115,7 @@ function App() {
           <Route path="dashboard" element={<MainDashbord />} />
           <Route path="users" element={<MainDashbord />} />
           <Route path="tests" element={<Tests />} />
-          <Route path="tests/:id" element={<TestDetails />} />
+          <Route path="tests/:id" element={<TestDetails socket={socket} />} /> {/* Pass the socket */}
           <Route path="document-library" element={<DocumentLibrary />} />
           <Route path="messaging" element={<MainScreen socket={socket} />} /> {/* Pass the socket here */}
           <Route path="student-list" element={<StudentList />} />

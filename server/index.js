@@ -14,6 +14,8 @@ import "./models/TestSeriesSchema.js";
 import "./models/MSQsSchema.js";
 import "./models/SolvedQuestionSchema.js";
 import { sign } from "crypto";
+import User from './models/UserSchema.js'; // Import the User model
+
 
 dotenv.config();
 const app = express();
@@ -52,30 +54,30 @@ io.use((socket, next) => {
   }
 });
 
-// Handle socket connections
+
 io.on("connection", (socket) => {
-  console.log("New client connected");
-    console.log(socket.user.id);
-    
-  // Join room based on chatID
-  socket.on("joinRoom", async ({ chatID }) => {
-    socket.join(chatID);
-    console.log(`User ${socket.user.id} joined chat: ${chatID}`);
-  });
-
-  // Handle sending messages
-  socket.on("sendMessage", async ({ chatID, message }) => {
+  socket.on("sendMessage", async ({ userID, teacherID, message }) => {
     try {
-      const senderID = socket.user.id;
-      const chat = await Chat.findOne({ chatID });
+      let chat = await Chat.findOne({ userID, teacherID });
 
-      if (!chat) {
-        return socket.emit("error", { message: "Chat not found" });
+      // Fetch the user who is sending the message (from the socket user id)
+      const sender = await User.findById(socket.user.id);
+
+      if (!sender) {
+        return console.error("Sender not found");
       }
 
-      // Add new message to chat
+      // Determine if the sender is the teacher or student based on the role
+      const senderID = sender.role === 'teacher' ? teacherID : userID;
+
+      // Create a new chat if it doesn't exist
+      if (!chat) {
+        const chatID = `${userID}-${teacherID}`;  // Generate a unique chat ID
+        chat = new Chat({ chatID, userID, teacherID, chat: [] });
+      }
+
       const newMessage = {
-        senderID,
+        senderID: socket.user.id, // Sender ID based on the authenticated user
         message,
         time: new Date(),
       };
@@ -83,21 +85,17 @@ io.on("connection", (socket) => {
       chat.chat.push(newMessage);
       await chat.save();
 
-      // Broadcast the message to everyone in the room
-      io.to(chatID).emit("receiveMessage", {
-        senderID,
+      console.log("Message sent:", newMessage);
+
+      // Broadcast the message to all in the room
+      io.to(chat.chatID).emit("receiveMessage", {
+        senderID: socket.user.id,
         message,
         time: newMessage.time,
       });
     } catch (error) {
-      console.error(error);
-      socket.emit("error", { message: "Error sending message" });
+      console.error("Error sending message:", error);
     }
-  });
-
-  // Handle client disconnect
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
   });
 });
 

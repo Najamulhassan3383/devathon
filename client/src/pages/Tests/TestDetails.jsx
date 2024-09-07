@@ -20,11 +20,12 @@ import {
 import axios from "axios";
 import Chat from "./Chat";
 import { useCookies } from "react-cookie"; // Import useCookies to retrieve the token
+import { useUser } from "../../context/UserContext";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
-export default function TestDetails() {
+export default function TestDetails({ socket }) { // Accept socket prop
   const { id } = useParams();
   const navigate = useNavigate();
   const [testSeries, setTestSeries] = useState(null);
@@ -34,6 +35,8 @@ export default function TestDetails() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [cookies] = useCookies(['x-auth-token']); // Retrieve the token from cookies
   const token = cookies['x-auth-token']; // Store the token
+
+  const {isUser} = useUser();
 
   useEffect(() => {
     const fetchTestDetails = async () => {
@@ -52,7 +55,7 @@ export default function TestDetails() {
         ]);
         setTestSeries(seriesResponse.data);
 
-        console.log(seriesResponse.data);
+        console.log(seriesResponse.data.teachersID._id);
         
         setQuestions(questionsResponse.data);
       } catch (error) {
@@ -62,7 +65,7 @@ export default function TestDetails() {
     };
 
     fetchTestDetails();
-  }, [id, token]); // Add token to the dependency array
+  }, [id, token]);
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -203,8 +206,9 @@ export default function TestDetails() {
         footer={null}
         width={600}
       >
-        <Chat socket={window.socket} testId={id} />
-      </Modal>
+        {/* Pass the socket to Chat component */}
+        <Chat socket={socket} testId={id} teacherID={testSeries.teachersID._id} studentID={isUser._id} />
+        </Modal>
     </Layout>
   );
 }
