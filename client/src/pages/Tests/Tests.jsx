@@ -48,7 +48,7 @@ export default function Tests() {
               cover={
                 <img
                   alt={test.test_series_name}
-                  src={`https://source.unsplash.com/400x200/?exam,test,education&sig=${test._id}`}
+                  src={`https://placehold.co/200x200`}
                   className="h-48 object-cover"
                 />
               }

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
-import io from 'socket.io-client';
-import { notification } from 'antd'; // Ant Design notification
+import io from "socket.io-client";
+import { notification } from "antd"; // Ant Design notification
 import AdminDashboard from "./layout/AdminDashboard";
 import EnrollmentJourny from "./pages/EnrollmentJourny/EnrollmentJourny";
 import StudentList from "./pages/StudentList";
@@ -17,13 +17,15 @@ import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import Tests from "./pages/Tests/Tests";
 import TestDetails from "./pages/Tests/TestDetails";
-import { useCookies } from 'react-cookie';
+import TeacherTestSeriesList from "./pages/TeacherTestSeries/TeacherTestSeriesList";
+import { useCookies } from "react-cookie";
+import CreateTestSeries from "./pages/TeacherTestSeries/CreateTestSeries";
 
-const SERVER_URL = 'http://localhost:5000'; // Update this with your actual server URL
+const SERVER_URL = "http://localhost:5000"; // Update this with your actual server URL
 
 function App() {
-  const [cookies] = useCookies(['x-auth-token']); // Get the token from cookies
-  const token = cookies['x-auth-token']; // Extract the token
+  const [cookies] = useCookies(["x-auth-token"]); // Get the token from cookies
+  const token = cookies["x-auth-token"]; // Extract the token
   const [socket, setSocket] = useState(null);
 
   // Establish socket connection in App.js
@@ -37,65 +39,65 @@ function App() {
       setSocket(newSocket);
 
       // Listen for enrollment success notification
-      newSocket.on('enrollmentSuccess', (data) => {
+      newSocket.on("enrollmentSuccess", (data) => {
         notification.success({
-          message: 'Enrollment Successful',
+          message: "Enrollment Successful",
           description: data.message,
-          placement: 'topRight',
+          placement: "topRight",
         });
       });
 
       // Listen for unenrollment success notification
-      newSocket.on('unenrollmentSuccess', (data) => {
+      newSocket.on("unenrollmentSuccess", (data) => {
         notification.info({
-          message: 'Unenrollment Successful',
+          message: "Unenrollment Successful",
           description: data.message,
-          placement: 'topRight',
+          placement: "topRight",
         });
       });
 
       // Listen for new test series notification
-      newSocket.on('newTestSeries', (data) => {
+      newSocket.on("newTestSeries", (data) => {
         notification.info({
-          message: 'New Test Series Added',
+          message: "New Test Series Added",
           description: data.message,
-          placement: 'topRight',
+          placement: "topRight",
         });
       });
 
       // Listen for new question notification
-      newSocket.on('newQuestion', (data) => {
+      newSocket.on("newQuestion", (data) => {
         notification.info({
           message: `New Question Added to ${data.test_series_name}`,
           description: data.message,
-          placement: 'topRight',
+          placement: "topRight",
         });
       });
 
       // Listen for discussion notifications
-      newSocket.on('newDiscussion', (data) => {
+      newSocket.on("newDiscussion", (data) => {
         notification.info({
           message: `New Discussion in ${data.test_series_name}`,
           description: data.message,
-          placement: 'topRight',
+          placement: "topRight",
         });
       });
 
       // Listen for solve question notification
-      newSocket.on('solveQuestion', (data) => {
+      newSocket.on("solveQuestion", (data) => {
         notification.info({
           message: `Question Solved in ${data.test_series_name}`,
-          description: `Answer: ${data.correct ? 'Correct' : 'Incorrect'}`,
-          placement: 'topRight',
+          description: `Answer: ${data.correct ? "Correct" : "Incorrect"}`,
+          placement: "topRight",
         });
       });
 
       // Listen for rating added notification
-      newSocket.on('addRatingToTestSeries', (data) => {
+      newSocket.on("addRatingToTestSeries", (data) => {
         notification.info({
           message: `New Rating for ${data.test_series_name}`,
           description: `Rating: ${data.rating}/5, Review: ${data.review}`,
-          placement: 'topRight',
+          placement: "topRight",
         });
       });
 
@@ -117,12 +119,15 @@ function App() {
           <Route path="tests" element={<Tests />} />
           <Route path="tests/:id" element={<TestDetails />} />
           <Route path="document-library" element={<DocumentLibrary />} />
-          <Route path="messaging" element={<MainScreen socket={socket} />} /> {/* Pass the socket here */}
+          <Route path="messaging" element={<MainScreen socket={socket} />} />
           <Route path="student-list" element={<StudentList />} />
           <Route path="enrollment-document" element={<EnrollmentDocuments />} />
           <Route path="sub-documents" element={<SubDocuments />} />
           <Route path="campus-content" element={<CampusContent />} />
           <Route path="student-record" element={<Record />} />
+          {/* <Route path="/create-test-series" element={<CreateTestSeries />} /> */}
+          <Route path="test-series" element={<TeacherTestSeriesList />} />
+          <Route path="test-series/:id" element={<TestDetails />} />
         </Route>
       </Routes>
     </div>
