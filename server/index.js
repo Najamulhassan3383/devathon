@@ -5,8 +5,12 @@ import cors from "cors";
 import userRoutes from "./routes/user.js";
 import emailRoutes from "./routes/email.js";
 import s3Routes from "./routes/s3.js";
+import testSeriesRoutes from "./routes/testSeries.js";
 
-
+// Import all models
+import './models/TestSeriesSchema.js';
+import './models/MSQsSchema.js';
+import './models/SolvedQuestionSchema.js';
 
 dotenv.config();
 const app = express();
@@ -19,6 +23,7 @@ connectDb();
 app.use("/api/user", userRoutes);
 app.use("/api/email", emailRoutes);
 app.use("/api/s3", s3Routes);
+app.use("/api/test-series", testSeriesRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

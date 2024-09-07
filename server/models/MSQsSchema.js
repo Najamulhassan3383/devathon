@@ -22,4 +22,6 @@ const msqsSchema = new Schema({
     }
 }, { timestamps: true });
 
-export default model('MSQs', msqsSchema);
+const MSQs = model('MSQs', msqsSchema);
+
+export default MSQs;
