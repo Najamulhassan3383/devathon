@@ -35,6 +35,16 @@ const testSeriesSchema = new Schema({
         discussion: {
             type: String
         }
+    }],
+    solvedBy: [{
+        userID: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        solvedAt: {
+            type: Date,
+            default: Date.now
+        }
     }]
 }, { timestamps: true });
 

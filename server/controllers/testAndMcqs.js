@@ -2,6 +2,7 @@ import User from "../models/UserSchema.js";
 import TestSeries from "../models/TestSeriesSchema.js";
 import MSQs from "../models/MSQsSchema.js";
 import Chat from "../models/ChatSchema.js";
+import SolvedQuestion from "../models/SolvedQuestionSchema.js";
 
 import { authorizeRoles, verifyUser } from "../middlewares/verifyUser.js";
 
@@ -180,6 +181,85 @@ export async function enrollInTestSeries(req, res) {
         await user.save();
 
         res.status(200).json({ success: true, message: "Enrolled in test series" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+//write a route so user can unenroll from test series
+export async function unenrollFromTestSeries(req, res) {
+    try {
+        const testSeries = await TestSeries.findById(req.params.id);
+
+        if (!testSeries) {
+            return res.status(404).json({ message: "Test series not found" });
+        }
+
+        const user = await User.findById(req.user.id);
+
+        if (!user.test_series.includes(req.params.id)) {
+            return res.status(400).json({ message: "You are not enrolled in this test series" });
+        }
+
+        user.test_series = user.test_series.filter(ts => ts.toString() !== req.params.id);
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Unenrolled from test series" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+//write a route to get all the test series enrolled by a user
+export async function getTestSeriesEnrolledByUser(req, res) {
+    try {
+        const user = await User.findById(req.user.id).populate("test_series");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, testSeries: user.test_series });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+
+export async function solveQuestion(req, res) {
+    try {
+        const { questionId, userAnswer } = req.body;
+
+        // Find the question
+        const question = await MSQs.findById(questionId);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        // Check if the answer is correct
+        const isCorrect = question.correct_answers === userAnswer;
+
+        // Track the solved question in the database
+        const solvedQuestion = new SolvedQuestion({
+            userID: req.user.id, // user solving the question
+            questionID: questionId,
+            testSeriesID: req.params.testSeriesId, // assuming testSeriesId is passed in params
+            correct: isCorrect
+        });
+
+        await solvedQuestion.save();
+
+        res.status(200).json({
+            success: true,
+            message: isCorrect ? "Correct answer!" : "Incorrect answer.",
+            solvedQuestion
+        });
 
     } catch (error) {
         console.error(error);

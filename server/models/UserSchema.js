@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 
-const UserSchema = new mongoose.Schema({
+const { Schema, model } = mongoose;
+
+const userSchema = new Schema({
     fName: {
         type: String,
         required: true
@@ -27,7 +29,33 @@ const UserSchema = new mongoose.Schema({
         enum: ['active', 'inactive', 'suspended'],
         default: 'active'
     },
+    test_series: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TestSeries'
+    }],
+    solvedTests: [{
+        testSeriesID: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'TestSeries'
+        },
+        solvedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    solvedQuestions: [{
+        questionID: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'MSQs'
+        },
+        solvedAt: {
+            type: Date,
+            default: Date.now
+        },
+        correct: {
+            type: Boolean
+        }
+    }]
 }, { timestamps: true });
 
-const User = mongoose.model('User', UserSchema);
-export default User;
+export default model('User', userSchema);
