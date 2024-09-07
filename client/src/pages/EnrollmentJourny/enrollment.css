@@ -1,0 +1,24 @@
+.enrollment-dash .ant-tabs-nav {
+    border-radius: 8px;
+}
+
+.enrollment-dash .ant-tabs-nav .ant-tabs-tab {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+/* Style the active tab item */
+.enrollment-dash .ant-tabs-nav .ant-tabs-tab-active {
+    background-color: var(--school-primary);
+    border-color: var(--school-primary);
+}
+
+.enrollment-dash .ant-tabs .ant-tabs-ink-bar {
+    border: none !important;
+    display: none !important;
+}
+
+.enrollment-dash .ant-tabs .ant-tabs-nav .ant-tabs-tab-active {
+    font-weight: normal !important;
+}
