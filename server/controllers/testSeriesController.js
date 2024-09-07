@@ -79,7 +79,7 @@ export const getSolvedQuestions = async (req, res) => {
 
 export const getPendingApprovals = async (req, res) => {
     try {
-        const pendingApprovals = await TestSeries.find({ isApproved: false }).populate("questions")
+        const pendingApprovals = await TestSeries.find({ isApproved: false }).populate("questions").populate("teachersID")
         res.json(pendingApprovals);
     } catch (error) {
         res.status(500).json({ message: error.message });

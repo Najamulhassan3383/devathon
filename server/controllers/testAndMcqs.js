@@ -163,21 +163,6 @@ export async function addQuestionToTestSeries(req, res) {
       _id: { $in: testSeries.students }, // Assuming 'students' field contains the list of enrolled student IDs
     });
 
-    // Send email notifications to all enrolled students
-    const emailPromises = enrolledStudents.map((student) => {
-      return sendEmail({
-        to: student.email,
-        subject: "New Question Added to Your Test Series",
-        html: `
-                    <div>
-                        <h1>New Question in Test Series: ${testSeries.test_series_name}</h1>
-                        <p>A new question has been added to the test series you're enrolled in. Start practicing now!</p>
-                    </div>
-                `,
-      });
-    });
-
-    await Promise.all(emailPromises); // Send all emails concurrently
 
     // Emit Socket.IO event to notify all students enrolled in the test series
     const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
@@ -235,10 +220,6 @@ export async function enrollInTestSeries(req, res) {
       return res.status(404).json({ message: "Test series not found" });
     }
 
-    if (testSeries.isPaid) {
-      return res.status(400).json({ message: "This test series is paid" });
-    }
-
     const user = await User.findById(req.user.id);
 
     // Check if user has already joined the test series
@@ -259,19 +240,6 @@ export async function enrollInTestSeries(req, res) {
     // Add the test series to user's `test_series` array
     user.test_series.push(testSeries._id);
     await user.save();
-
-    // Notify the user by email
-    await sendEmail({
-      to: user.email,
-      subject: "Enrollment Confirmation",
-      html: `
-                <div>
-                    <h1>Enrolled in Test Series: ${testSeries.test_series_name}</h1>
-                    <p>You have successfully enrolled in the test series: ${testSeries.test_series_name}. Start practicing now!</p>
-                </div>
-            `,
-    });
-
     // Emit a Socket.IO event to the user who just enrolled
     const io = req.app.get("io"); // Retrieve the Socket.IO instance from the app
     io.to(user._id.toString()).emit("enrollmentSuccess", {

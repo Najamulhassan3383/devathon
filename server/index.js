@@ -15,6 +15,8 @@ import "./models/MSQsSchema.js";
 import "./models/SolvedQuestionSchema.js";
 import { sign } from "crypto";
 import User from './models/UserSchema.js'; // Import the User model
+import stripeRoutes from './routes/stripe.js';
+
 
 
 
@@ -22,6 +24,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use('/stripe', stripeRoutes);
 
 const PORT = process.env.PORT || 5000;
 

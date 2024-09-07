@@ -189,7 +189,7 @@ export default function TestDetails({ socket }) { // Accept socket prop
                 Previous
               </Button>
               {currentQuestion < questions.length - 1 ? (
-                <Button type="primary" onClick={handleNextQuestion}>
+                <Button className="bg-blue-600" type="primary" onClick={handleNextQuestion}>
                   Next
                 </Button>
               ) : (
