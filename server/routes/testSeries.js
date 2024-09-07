@@ -5,11 +5,12 @@ import {
   getTestSeriesQuestions,
   getSolvedQuestions,
   getPendingApprovals,
-  approveTestSeries
+  approveTestSeries,
 } from "../controllers/testSeriesController.js";
 import {
   getTeacherTestSeries,
   enrollInTestSeries,
+  postDiscussion
 } from "../controllers/testAndMcqs.js";
 import { addTestSeriesWithQuestions } from "../controllers/testAndMcqs.js";
 import { verifyUser } from "../middlewares/verifyUser.js";
@@ -47,5 +48,7 @@ router.get('/chat/:ID', verifyUser, chatController.getChatByUserOrTeacher);
 
 // Submit test
 router.post('/:id/submit', verifyUser, submitTest);
+
+router.post('/discussion/:id', verifyUser, postDiscussion);
 
 export default router;
