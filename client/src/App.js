@@ -20,10 +20,11 @@ import TestDetails from "./pages/Tests/TestDetails";
 import TeacherTestSeriesList from "./pages/TeacherTestSeries/TeacherTestSeriesList";
 import { useCookies } from "react-cookie";
 import CreateTestSeries from "./pages/TeacherTestSeries/CreateTestSeries";
-
-const SERVER_URL = "http://localhost:5000"; // Update this with your actual server URLimport Students from './pages/Students';
 import Teachers from './pages/Teachers';
 import Profile from './pages/Profile';
+import Students from "./pages/Students";
+
+const SERVER_URL = "http://localhost:5000"; // Update this with your actual server URLimport Students from './pages/Students';
 
 
 function App() {
