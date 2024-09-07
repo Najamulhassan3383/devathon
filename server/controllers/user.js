@@ -37,12 +37,18 @@ export const login = async (req, res) => {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
                 expiresIn: '30d'
             })
-            res.cookie('x-auth-token', token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none'
-            })
-            res.status(201).json({ token, success: true, message: "Logged In Successfully!" })
+            if (user.status === 'pending') {
+                res.status(200).json({ message: "Teacher is pending approval", success: false })
+            } else if (user.status === 'suspended') {
+                res.status(200).json({ message: "Teacher is suspended", success: false })
+            } else {
+                res.cookie('x-auth-token', token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none'
+                })
+                res.status(201).json({ token, success: true, message: "Logged In Successfully!" })
+            }
         }
         else {
             res.status(400).json({ message: "Invalid Email or Password!", success: false })

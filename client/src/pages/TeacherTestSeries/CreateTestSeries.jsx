@@ -16,7 +16,7 @@ import { useCookies } from "react-cookie";
 
 const { Title, Text } = Typography;
 
-const CreateTestSeries = () => {
+const CreateTestSeries = ({ onSuccess }) => {
   const [cookies, setCookie, removeCookie] = useCookies(["x-auth-token"]);
   const [file, setFile] = useState(null);
   const [testSeriesName, setTestSeriesName] = useState("");
@@ -79,6 +79,7 @@ const CreateTestSeries = () => {
       );
       message.success("Test series created successfully!");
       console.log(response.data);
+      onSuccess();
     } catch (error) {
       console.error("Error creating test series:", error);
       message.error("Failed to create test series. Please try again.");
@@ -125,7 +126,7 @@ const CreateTestSeries = () => {
         Please upload a CSV file with the following columns: question, option1,
         option2, option3, option4, correct_answer, subject
       </Text>
-      <Button type="primary" onClick={handleSubmit} className="mt-4">
+      <Button type="primary" onClick={handleSubmit} className="mt-4 bg-blue-500">
         Create Test Series
       </Button>
       <Card className="mt-4">

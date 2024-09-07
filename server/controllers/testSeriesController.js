@@ -35,7 +35,7 @@ export const getTestSeriesById = async (req, res) => {
         const testSeries = await TestSeries.findById(req.params.id)
             .populate('teachersID', 'email')
             .populate('questions');
-        
+
         if (!testSeries) {
             return res.status(404).json({ message: 'Test series not found' });
         }
@@ -72,6 +72,24 @@ export const getSolvedQuestions = async (req, res) => {
             userID: req.params.userId
         }).populate('questionID');
         res.json(solvedQuestions);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getPendingApprovals = async (req, res) => {
+    try {
+        const pendingApprovals = await TestSeries.find({ isApproved: false }).populate("questions")
+        res.json(pendingApprovals);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const approveTestSeries = async (req, res) => {
+    try {
+        const testSeries = await TestSeries.findByIdAndUpdate(req.params.id, { isApproved: true });
+        res.json(testSeries);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

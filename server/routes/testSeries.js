@@ -4,6 +4,8 @@ import {
   getTestSeriesById,
   getTestSeriesQuestions,
   getSolvedQuestions,
+  getPendingApprovals,
+  approveTestSeries
 } from "../controllers/testSeriesController.js";
 import {
   getTeacherTestSeries,
@@ -19,6 +21,8 @@ const router = express.Router();
 // Get all test series (authenticated)
 router.get("/", verifyUser, getAllTestSeries);
 router.get("/teacher", verifyUser, getTeacherTestSeries);
+router.get('/pending-approvals', getPendingApprovals);
+router.put('/approve/:id', approveTestSeries);
 
 router.post("/addTestSeries", verifyUser, addTestSeriesWithQuestions);
 

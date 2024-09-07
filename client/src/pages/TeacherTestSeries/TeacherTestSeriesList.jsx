@@ -31,7 +31,6 @@ export default function TeacherTestSeriesList() {
       setTestSeries(response.data.testSeries);
     } catch (error) {
       console.error("Error fetching test series:", error);
-      message.error("Failed to load test series. Please try again later.");
     }
   };
 
@@ -49,7 +48,7 @@ export default function TeacherTestSeriesList() {
   };
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
+    <div className="p-8 bg-gray-100 h-[90vh]">
       <div className="flex justify-between items-center mb-6">
         <Title level={2} className="text-blue-800">
           Your Test Series
@@ -64,6 +63,9 @@ export default function TeacherTestSeriesList() {
         </Button>
       </div>
       <Row gutter={[16, 16]}>
+        {testSeries.length === 0 && <div>
+          <div className="text-center text-gray-500">No Test Series Found</div>
+        </div>}
         {testSeries.map((test) => (
           <Col xs={24} sm={12} md={8} lg={6} key={test._id}>
             <Card
@@ -95,11 +97,6 @@ export default function TeacherTestSeriesList() {
                     {test.isPaid ? `Price: $${test.price}` : "Free"}
                   </Text>
                   <div className="flex justify-between items-center">
-                    <Link to={`/teacher/test-series/${test._id}`}>
-                      <Button type="link" className="p-0 flex items-center">
-                        Details <RightOutlined />
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               </div>
